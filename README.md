@@ -29,4 +29,4 @@ It is a dynamic two-player game that offers a thrilling racing experience. Utili
 
 - You need to download DOSBox
 - Change mount dircetory to the game folder
-- You need to change DOSBox configuration. [Click Here](https://www.dedoimedo.com/games/reviving/dosbox_multiplayer_cont.html)
+- You need to change DOSBox configuration.     [Click Here](https://www.dedoimedo.com/games/reviving/dosbox_multiplayer_cont.html)
