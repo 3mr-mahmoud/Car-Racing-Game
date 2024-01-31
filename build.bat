@@ -1,0 +1,16 @@
+masm m1.asm
+masm reset.asm
+masm status
+masm grp.asm
+masm drawroad.asm
+masm move.asm
+masm powers.asm
+masm drawite.asm
+masm genitems.asm
+masm randpow.asm
+masm home.asm
+masm drawpav.asm
+masm readfile.asm
+masm progress.asm
+masm chat.asm
+link m1+grp+drawroad+move+powers+drawite+genitems+randpow+home+status+reset+drawpav+readfile+progress+chat

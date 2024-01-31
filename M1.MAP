@@ -1,0 +1,12 @@
+
+ Start  Stop   Length Name               Class
+
+ 00000H 0064AH 0064BH M1_TEXT            CODE
+ 0064CH 01158H 00B0DH _TEXT              CODE
+ 0115AH 01C6BH 00B12H MOVE_TEXT          CODE
+ 01C6CH 01EF7H 0028CH POWERS_TEXT        CODE
+ 01F00H 023D4H 004D5H _DATA              DATA
+ 023E0H 0281FH 00440H STACK              STACK
+
+Program entry point at 0000:0000
+

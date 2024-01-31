@@ -1,0 +1,33 @@
+
+ Start  Stop   Length Name               Class
+
+ 00000H 00A3CH 00A3DH MOVE_TEXT          CODE
+ 00A3EH 00A55H 00018H _DATA              DATA
+
+Error: Undefined symbol ITEMS_X in module D:\MOVE.ASM
+Error: Undefined symbol ITEMS_Y in module D:\MOVE.ASM
+Error: Undefined symbol ITEMS_TYPE in module D:\MOVE.ASM
+Error: Undefined symbol ITEMS in module D:\MOVE.ASM
+Error: Undefined symbol CHECK_IF_COLOR in module D:\MOVE.ASM
+Error: Undefined symbol X1_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol X2_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol Y1_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol Y2_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol COLOR_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol powerTypeTemp in module D:\MOVE.ASM
+Error: Undefined symbol CURSTATE_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol SPEED_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol FLAG_DIRECTION_TEMP in module D:\MOVE.ASM
+Error: Undefined symbol PREVSTATE_PASSOBSTEMP in module D:\MOVE.ASM
+Error: Undefined symbol PASSOBS_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol GENOBS_CARTEMP in module D:\MOVE.ASM
+Error: Undefined symbol LEFT_CAR2 in module D:\MOVE.ASM
+Error: Undefined symbol RIGHT_CAR2 in module D:\MOVE.ASM
+Error: Undefined symbol UP_CAR2 in module D:\MOVE.ASM
+Error: Undefined symbol DOWN_CAR2 in module D:\MOVE.ASM
+Error: Undefined symbol LEFT_CAR1 in module D:\MOVE.ASM
+Error: Undefined symbol RIGHT_CAR1 in module D:\MOVE.ASM
+Error: Undefined symbol UP_CAR1 in module D:\MOVE.ASM
+Error: Undefined symbol DOWN_CAR1 in module D:\MOVE.ASM
+Fatal: No program entry point
+

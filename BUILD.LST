@@ -1,0 +1,218 @@
+Microsoft (R) Macro Assembler Version 5.10                  12/10/23 17:25:1
+                                                             Page     1-1
+
+
+				  EXTRN  points:byte
+				  EXTRN  road_x:WORD
+				  EXTRN   road_y:WORD
+				  EXTRN   last_move_direction:byte
+				  EXTRN   first_direction:byte
+				  EXTRN   gonext:byte
+				  EXTRN   curr_x:WORD
+				  EXTRN   curr_y:WORD
+				  PUBLIC generateRoadPoints
+ = 0023				road_part_length    equ 32
+ = 0010				maxpoints           equ 16
+				.model small
+				.code
+ 0000				generateRoadPoints proc far
+ 0000  BE 0000 E		               mov  si,offset road_x
+ 0003  BF 0000 E		               mov  di,offset road_y
+ 0006  8B 0E 0000 E		               mov  cx,curr_x
+ 000A  8B 16 0000 E		               mov  dx,curr_y
+ 000E  89 0C			               mov  [si],cx          ; save fir
+				st x coordinate
+ 0010  89 15			               mov  [di],dx          ; save fir
+				st y coordinate
+ 0012  83 C6 02			               add  si,2             ; goto nex
+				t word
+ 0015  83 C7 02			               add  di,2             ; goto nex
+				t word
+ 0018  FE 06 0000 E		               inc points
+				       
+ 001C				  random:      
+ 001C  80 3E 0000 E 10		               cmp  points,maxpoints
+ 0021  74 38			               JE   finish_
+ 0023  B4 2C			               mov  ah,2ch
+ 0025  CD 21			               int  21h
+ 0027  8A C2			               mov  al,dl
+				               ;mov  ah,0
+				               ;mov  bh,3
+				               ;div  bh                      ;g
+				et reminder of dl in ah (0,1,2) -> (down,up,rig
+				ht)
+				
+ 0029  C6 06 0000 E 00		               mov  gonext,0
+ 002E  E8 00A9 R		               call checknext
+ 0031  80 3E 0000 E 00		               cmp  gonext,0
+ 0036  74 E4			               je   random
+				      
+ 0038  80 3E 0000 E 01		               cmp  last_move_direction,1
+ 003D  74 04			               je   escapedown
+ 003F  3C 1E			               cmp  al,30
+ 0041  7C 1B			               jl   down
+ 0043				  escapedown:  
+ 0043  80 3E 0000 E 00		               cmp  last_move_direction,0
+ 0048  74 04			               je   escapeup
+ 004A  3C 3C			               cmp  al,60
+ 004C  7C 1A			               jl   up
+Microsoft (R) Macro Assembler Version 5.10                  12/10/23 17:25:1
+                                                             Page     1-2
+
+
+ 004E				  escapeup:    
+ 004E  80 3E 0000 E 02		               cmp  last_move_direction,2
+ 0053  74 04			               je   escaperight
+ 0055  3C 63			               cmp  al,99
+ 0057  7E 1D			               jle   right
+ 0059				  escaperight:
+ 0059  EB C1			               jmp  random
+ 005B  EB 4B 90			  finish_: jmp  finish    
+ 005E				  down:        
+ 005E  83 06 0000 E 23		               add curr_y,road_part_length
+ 0063  B4 00			               mov  ah,0
+ 0065  EB 19 90			               jmp  savepoint
+ 0068				  up:
+ 0068  3C 1E			               cmp  al,30
+ 006A  7C E2			               jl   escapeup         
+ 006C  83 2E 0000 E 23		               sub curr_y,road_part_length
+ 0071  B4 01			               mov  ah,1
+ 0073  EB 0B 90			               jmp  savepoint
+ 0076				  right:       
+ 0076  83 06 0000 E 23		               add curr_x,road_part_length
+ 007B  B4 02			               mov  ah,2
+ 007D  EB 01 90			               jmp  savepoint
+ 0080				  savepoint:
+ 0080  80 3E 0000 E 01		              cmp points, 1
+ 0085  75 04			              jne escapesavefirstdir
+ 0087  88 26 0000 E		              mov first_direction, ah
+ 008B				              escapesavefirstdir:
+ 008B  88 26 0000 E		              mov last_move_direction,ah
+ 008F  8B 0E 0000 E		               mov  cx,curr_x
+ 0093  8B 16 0000 E		               mov  dx,curr_y
+ 0097  89 0C			               mov  [si],cx          ; save x c
+				oordinate
+ 0099  89 15			               mov  [di],dx          ; save y c
+				oordinate
+ 009B  83 C6 02			               add  si,2
+ 009E  83 C7 02			               add  di,2
+ 00A1  FE 06 0000 E		               inc  points
+ 00A5  E9 001C R		               jmp  random
+ 00A8				  finish:
+ 00A8  CB			               ret
+				
+ 00A9				generateRoadPoints endp
+ 00A9				checknext proc
+ 00A9  3C 1E			               cmp  al,30
+ 00AB  7C 07			               jl   checkdown
+ 00AD  3C 3C			               cmp  al,60
+ 00AF  7C 12			               jl   checkup
+ 00B1  EB 1E 90			               jmp  checkright
+ 00B4				  checkdown:   
+ 00B4  8B 1E 0000 E		               mov bx,curr_y
+ 00B8  83 C3 32			               add  bx,road_part_length+15
+ 00BB  81 FB 00AA		               cmp  bx,170
+ 00BF  7D 25			               JGE  clear_gonext
+ 00C1  7C 1D			               JL   set_gonext
+Microsoft (R) Macro Assembler Version 5.10                  12/10/23 17:25:1
+                                                             Page     1-3
+
+
+				                
+ 00C3				  checkup:     
+ 00C3  8B 1E 0000 E		               mov bx,curr_y
+ 00C7  83 EB 32			               sub  bx,road_part_length+15
+ 00CA  83 FB 00			               cmp  bx,0                    ; 3
+				 > 0
+ 00CD  7E 17			               JLE  clear_gonext
+ 00CF  7F 0F			               JG   set_gonext
+ 00D1				  checkright:    
+ 00D1  8B 1E 0000 E		               mov bx,curr_x
+ 00D5  83 C3 32			               add  bx,road_part_length+15
+ 00D8  81 FB 0140		               cmp  bx,320                  ; 3
+				 > 320
+ 00DC  7D 08			               JGE  clear_gonext
+ 00DE  7C 00			               JL   set_gonext
+ 00E0				  set_gonext:  
+ 00E0  C6 06 0000 E 01		               mov  gonext,1
+ 00E5  C3			               ret
+ 00E6				  clear_gonext:
+ 00E6  C6 06 0000 E 00		               mov  gonext,0
+ 00EB  C3			               ret
+ 00EC				checknext endp
+				end
+Microsoft (R) Macro Assembler Version 5.10                  12/10/23 17:25:1
+                                                             Symbols-1
+
+
+Segments and Groups:
+
+                N a m e         	Length	 Align	Combine Class
+
+DGROUP . . . . . . . . . . . . .  	GROUP
+  _DATA  . . . . . . . . . . . .  	0000	WORD	PUBLIC	'DATA'
+_TEXT  . . . . . . . . . . . . .  	00EC	WORD	PUBLIC	'CODE'
+
+Symbols:            
+
+                N a m e         	Type	 Value	 Attr
+
+CHECKDOWN  . . . . . . . . . . .  	L NEAR	00B4	_TEXT
+CHECKNEXT  . . . . . . . . . . .  	N PROC	00A9	_TEXT	Length = 0043
+CHECKRIGHT . . . . . . . . . . .  	L NEAR	00D1	_TEXT
+CHECKUP  . . . . . . . . . . . .  	L NEAR	00C3	_TEXT
+CLEAR_GONEXT . . . . . . . . . .  	L NEAR	00E6	_TEXT
+CURR_X . . . . . . . . . . . . .  	V WORD	0000		External
+CURR_Y . . . . . . . . . . . . .  	V WORD	0000		External
+
+DOWN . . . . . . . . . . . . . .  	L NEAR	005E	_TEXT
+
+ESCAPEDOWN . . . . . . . . . . .  	L NEAR	0043	_TEXT
+ESCAPERIGHT  . . . . . . . . . .  	L NEAR	0059	_TEXT
+ESCAPESAVEFIRSTDIR . . . . . . .  	L NEAR	008B	_TEXT
+ESCAPEUP . . . . . . . . . . . .  	L NEAR	004E	_TEXT
+
+FINISH . . . . . . . . . . . . .  	L NEAR	00A8	_TEXT
+FINISH_  . . . . . . . . . . . .  	L NEAR	005B	_TEXT
+FIRST_DIRECTION  . . . . . . . .  	V BYTE	0000		External
+
+GENERATEROADPOINTS . . . . . . .  	F PROC	0000	_TEXT	Global	Length = 00A9
+GONEXT . . . . . . . . . . . . .  	V BYTE	0000		External
+
+LAST_MOVE_DIRECTION  . . . . . .  	V BYTE	0000		External
+
+MAXPOINTS  . . . . . . . . . . .  	NUMBER	0010	
+
+POINTS . . . . . . . . . . . . .  	V BYTE	0000		External
+
+RANDOM . . . . . . . . . . . . .  	L NEAR	001C	_TEXT
+RIGHT  . . . . . . . . . . . . .  	L NEAR	0076	_TEXT
+ROAD_PART_LENGTH . . . . . . . .  	NUMBER	0023	
+ROAD_X . . . . . . . . . . . . .  	V WORD	0000		External
+ROAD_Y . . . . . . . . . . . . .  	V WORD	0000		External
+
+SAVEPOINT  . . . . . . . . . . .  	L NEAR	0080	_TEXT
+SET_GONEXT . . . . . . . . . . .  	L NEAR	00E0	_TEXT
+
+UP . . . . . . . . . . . . . . .  	L NEAR	0068	_TEXT
+
+@CODE  . . . . . . . . . . . . .  	TEXT  _TEXT		
+@CODESIZE  . . . . . . . . . . .  	TEXT  0		
+Microsoft (R) Macro Assembler Version 5.10                  12/10/23 17:25:1
+                                                             Symbols-2
+
+
+@CPU . . . . . . . . . . . . . .  	TEXT  0101h		
+@DATASIZE  . . . . . . . . . . .  	TEXT  0		
+@FILENAME  . . . . . . . . . . .  	TEXT  grp		
+@VERSION . . . . . . . . . . . .  	TEXT  510		
+
+
+    121 Source  Lines
+    121 Total   Lines
+     44 Symbols
+
+  47978 + 455169 Bytes symbol space free
+
+      0 Warning Errors
+      0 Severe  Errors

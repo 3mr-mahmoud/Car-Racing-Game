@@ -1,0 +1,1127 @@
+initialCar MACRO y1Car1,y2Car1,x1Car1,x2Car1,y1Car2,y2Car2,x1Car2,x2Car2
+    mov y1_Car1,y1Car1
+    mov y2_Car1,y2Car1
+    mov x1_Car1,x1Car1
+    mov x2_Car1,x2Car1
+    mov y1_Car2,y1Car2
+    mov y2_Car2,y2Car2
+    mov x1_Car2,x1Car2
+    mov x2_Car2,x2Car2
+ENDM
+
+
+
+
+
+
+
+drdown:
+initialCar 103,110,33,40,103,110,20,27
+jmp toDrawCars
+drup:
+initialCar 93,100,33,40,93,100,20,27
+jmp toDrawCars
+drright:
+initialCar 90,97,30,37,103,110,30,37
+
+toDrawCars:
+drawCar x1_Car1,y1_Car1,x2_Car1,y2_Car1,9h
+drawCar x1_Car2,y1_Car2,x2_Car2,y2_Car2,1h
+
+
+
+check:
+in al,60h     ;get key pressed without wait
+mov BP, 2500
+call check_move
+
+
+cmp left_Car2,1     ;check if flag of left of car2 (pressed or not)
+jnz not_move_left2
+mov ax,0300h
+call moveCar2
+cmp al,4d
+jz final21
+sub BP,250
+
+
+not_move_left2:
+cmp right_Car2,1    ;check if flag of right of car2 (pressed or not)
+jnz not_move_right2
+mov ax,0200h
+call moveCar2
+cmp al,4d
+jz final21
+sub BP,250
+
+
+not_move_right2:
+cmp up_Car2,1       ;check if flag of up of car2 (pressed or not)
+jnz not_move_up2
+mov ax,0100h
+call moveCar2
+cmp al,4d
+jz final21
+sub BP,250
+
+
+not_move_up2:
+cmp down_Car2,1     ;check if flag of down of car2 (pressed or not)
+jnz not_move_down2
+mov ax,0000h
+call moveCar2
+cmp al,4d
+jz final21
+sub BP,250
+jmp not_move_down2
+
+final21: jmp final
+
+not_move_down2:
+cmp left_Car1,1     ;check if flag of left of car1 (pressed or not)
+jnz not_move_left1
+mov ax,0300h
+call moveCar1
+cmp al,4d
+jz final21
+sub BP,250
+
+
+
+not_move_left1:
+cmp right_Car1,1    ;check if flag of right of car1 (pressed or not)
+jnz not_move_right1
+mov ax,0200h
+call moveCar1
+cmp al,4d
+jz final21
+sub BP,250
+
+
+not_move_right1:
+cmp up_Car1,1       ;check if flag of up of car1 (pressed or not)
+jnz not_move_up1
+mov ax,0100h
+call moveCar1
+cmp al,4d
+jz final21
+sub BP,250
+
+
+not_move_up1:
+cmp down_Car1,1     ;check if flag of down of car1 (pressed or not)
+jnz not_move_down1
+mov ax,0000h
+call moveCar1
+cmp al,4d
+jz final
+sub BP,250
+
+
+not_move_down1:
+in al,60h
+call powerUps
+call drawItems
+
+
+delay2:
+in al,60h
+call check_move
+
+dec BP
+cmp BP,0    
+jge delay2
+jmp check
+
+
+final:
+
+///////////////////////////////////////////move.asm///////////////////////////////////////////////////////////
+INCLUDE macros.inc
+
+EXTRN items:WORD
+EXTRN items_x:WORD
+EXTRN items_y:WORD
+EXTRN items_type:BYTE
+
+EXTRN x1_Car1:WORD
+EXTRN x2_Car1:WORD
+EXTRN y1_Car1:WORD
+EXTRN y2_Car1:WORD
+EXTRN speed_Car1:WORD
+EXTRN color_Car1:BYTE
+EXTRN left_Car1:BYTE
+EXTRN right_Car1:BYTE
+EXTRN up_Car1:BYTE
+EXTRN down_Car1:BYTE
+EXTRN genObs_Car1:BYTE
+EXTRN passObs_Car1:BYTE
+
+
+EXTRN x1_Car2:WORD
+EXTRN x2_Car2:WORD
+EXTRN y1_Car2:WORD
+EXTRN y2_Car2:WORD
+EXTRN speed_Car2:WORD
+EXTRN color_Car2:BYTE
+EXTRN left_Car2:BYTE
+EXTRN right_Car2:BYTE
+EXTRN up_Car2:BYTE
+EXTRN down_Car2:BYTE
+EXTRN genObs_Car2:BYTE
+EXTRN passObs_Car2:BYTE
+
+
+EXTRN check_if_color:BYTE
+
+PUBLIC moveCar1,moveCar2,check_move
+
+
+
+.model large  
+.data
+item_color      DB      0
+prevState_passObs1       DB      0       ;flag for showing if car1 start passing through obstacle before
+curState_Car1        DB      0       ;flag for showing if there is obstacle around or in car1
+
+prevState_passObs2       DB      0       ;flag for showing if car2 start passing through obstacle before
+curState_Car2        DB      0       ;flag for showing if there is obstacle around or in car2
+
+.code
+add_obstacle    proc far
+mov si,offset items_x
+mov di,offset items_y
+mov bx,offset items_type
+
+add si,items     ; add two times to move by words
+add si,items
+add di,items     ; add two times to move by words
+add di,items
+add bx,items
+mov [si],cx  ; save the generated data
+mov [di],dx  ; save the generated data
+mov [bx],al  ; save the generated data
+inc items
+
+
+ret
+add_obstacle endp
+
+check_not_white_col proc FAR
+mov check_if_color,0
+add si,1
+check_colors_loop1:
+mov ah,0dh
+int 10h         ; get color of pixel in CX,DX (al = color)
+cmp al,0fh
+jnz return_not_white1
+inc dx
+cmp dx,si
+jnz check_colors_loop1
+ret
+return_not_white1: mov check_if_color,1
+mov item_color,al
+ret
+check_not_white_col endp
+
+check_not_white_row proc FAR
+mov check_if_color,0
+add si,1
+check_colors_loop2:
+mov ah,0dh
+int 10h         ; get color of pixel in CX,DX (al = color)
+cmp al,0fh
+jnz return_not_white2
+inc cx
+cmp CX,si
+jnz check_colors_loop2
+ret
+return_not_white2: mov check_if_color,1
+mov item_color,al
+ret
+check_not_white_row endp
+
+
+check_around_OR_in_car1       proc  far ;check if around the car an obstacle
+mov CX,x1_Car1
+mov si,x2_Car1
+mov DX,y1_Car1
+dec DX
+call check_not_white_row    ;check above car
+cmp check_if_color,1
+jnz not_above_Car1
+cmp item_color,2        ;green obstacle
+jnz not_above_Car1
+mov curState_Car1,1
+ret
+
+not_above_Car1:
+mov CX,x1_Car1
+mov si,x2_Car1
+mov DX,y2_Car1
+inc DX
+call check_not_white_row    ;check below car
+cmp check_if_color,1
+jnz not_below_Car1
+cmp item_color,2
+jnz not_below_Car1
+mov curState_Car1,1
+ret
+
+not_below_Car1:
+mov CX,x2_Car1
+mov DX ,y1_Car1
+mov si ,y2_Car1
+inc CX
+call check_not_white_col    ;check right car
+cmp check_if_color,1
+jnz not_right_Car1
+cmp item_color,2
+jnz not_right_Car1
+mov curState_Car1,1
+ret
+
+not_right_Car1:
+mov CX,x1_Car1
+mov DX ,y1_Car1
+mov si ,y2_Car1
+dec CX
+call check_not_white_col    ;check left car
+cmp check_if_color,1
+jnz not_left_Car1
+cmp item_color,2
+jnz not_left_Car1
+mov curState_Car1,1
+ret
+
+not_left_Car1:
+mov si,offset items_x
+mov di,offset items_y
+add si,items     ; add two times to move by words
+add si,items
+add di,items     ; add two times to move by words
+add di,items
+mov CX,items
+check_itemsArray1:
+mov DX,[si]
+cmp DX,x1_Car1
+jl next1
+cmp DX,x2_Car1
+jg next1
+mov DX,[di]
+cmp DX,y1_Car1
+jl next1
+cmp DX,y2_Car1
+jg next1
+
+mov curState_Car1,1
+jmp return1
+
+next1:
+sub si,2
+sub di,2
+loop check_itemsArray1
+
+mov curState_Car1,0
+return1: 
+ret
+check_around_OR_in_car1 endp
+
+
+moveCar1    proc far
+cmp ah,0    ;al=color,ah,direction      (0,1,2,3) -> (down,up,right,left)
+jnz not_move1down
+jmp move1Down
+not_move1down:    cmp ah,1
+jnz not_move1Up
+jmp move1Up
+not_move1Up:    cmp ah,2
+jnz not_move1Right
+jmp move1Right
+not_move1Right:
+jmp move1Left
+
+move1Down:
+mov di,speed_Car1
+cmp di,0        ;check if speed equal = 0
+jnz move1Downspeed
+ret
+move1Downspeed:
+mov BX,y2_Car1  
+inc BX
+
+push di
+call check_around_OR_in_car1
+pop di
+mov DX,BX
+mov CX ,x1_Car1
+mov si ,x2_Car1
+
+call check_not_white_row
+
+mov cl,curState_Car1
+and cl,prevState_passObs1       ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov prevState_passObs1,cl
+
+cmp check_if_color,1
+jnz can_move_down1
+
+cmp item_color,2
+jz skip11
+jmp exit1Car1
+
+skip11:
+cmp prevState_passObs1,0
+jz no_passing_down1
+;cmp curState_Car1,0
+;jz no_passing_down1
+jmp can_move_down1
+
+no_passing_down1:
+cmp passObs_Car1+1,1
+jnz exit1Car1
+mov prevState_passObs1,1
+mov passObs_Car1+1,0
+
+can_move_down1:
+cmp genObs_Car1+1,1
+jnz not_genObs_down1    ;genObs_Car1+1 = 0 (not active) not generate obstacle due to moving down car1
+push di
+push BX
+push AX
+mov CX,x1_Car1
+add CX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov dx,y1_Car1
+mov al,0
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car1+1,0
+
+not_genObs_down1:
+
+mov y2_Car1,BX
+drawRow x1_Car1,x2_Car1,BX,color_Car1
+mov BX,y1_Car1
+drawRow x1_Car1,x2_Car1,BX,0fh
+inc BX
+mov y1_Car1,BX
+dec di
+cmp di,0h
+jz exit1Car1
+jmp move1Downspeed
+exit1Car1:      ret
+
+move1Up:
+mov di,speed_Car1
+cmp di,0        ;check if speed equal = 0
+jnz move1UpSpeed
+ret
+move1UpSpeed:
+mov BX,y1_Car1   
+dec BX
+
+push di
+call check_around_OR_in_car1
+pop di
+mov DX,BX
+mov CX ,x1_Car1
+mov si ,x2_Car1
+
+call check_not_white_row
+
+mov cl,curState_Car1
+and cl,prevState_passObs1       ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov prevState_passObs1,cl
+
+
+cmp check_if_color,1
+jnz can_move_up1
+cmp item_color,2
+jz skip12
+jmp exit2Car1
+
+skip12:
+cmp prevState_passObs1,0
+jz no_passing_up1
+;cmp curState_Car1,0
+;jz no_passing_up1
+jmp can_move_up1
+
+no_passing_up1:
+cmp passObs_Car1+1,1
+jnz exit2Car1
+mov prevState_passObs1,1
+mov passObs_Car1+1,0
+
+can_move_up1:
+cmp genObs_Car1+1,1
+jnz not_genObs_up1    ;genObs_Car1+1 = 0 (not active) not generate obstacle due to moving down car1
+push di
+push BX
+push AX
+mov CX,x1_Car1
+add CX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov dx,y2_Car1
+mov al,0
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car1+1,0
+not_genObs_up1:
+
+mov y1_Car1,BX
+drawRow x1_Car1,x2_Car1,BX,color_Car1
+mov BX,y2_Car1
+drawRow x1_Car1,x2_Car1,BX,0fh
+dec BX
+mov y2_Car1,BX
+dec di
+cmp di,0h
+jz exit2Car1
+jmp move1UpSpeed
+
+exit2Car1:      ret
+
+move1Right:
+mov di,speed_Car1
+cmp di,0        ;check if speed equal = 0
+jnz move1RightSpeed
+ret
+move1RightSpeed:
+mov BX,x2_Car1  
+inc BX
+
+push di
+call check_around_OR_in_car1
+pop di
+mov CX,BX
+mov DX ,y1_Car1
+mov si ,y2_Car1
+
+call check_not_white_col
+
+mov cl,curState_Car1
+and cl,prevState_passObs1       ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov prevState_passObs1,cl
+
+cmp check_if_color,1
+jnz can_move_right1
+cmp item_color,2
+jz skip13
+jmp exit3Car1
+
+skip13:
+cmp prevState_passObs1,0
+jz no_passing_right1
+;cmp curState_Car1,0
+;jz no_passing_right1
+jmp can_move_right1
+
+no_passing_right1:
+cmp passObs_Car1+1,1
+jnz exit3Car1
+mov prevState_passObs1,1
+mov passObs_Car1+1,0
+
+can_move_right1:
+
+cmp genObs_Car1+1,1
+jnz not_genObs_right1    ;genObs_Car1+1 = 0 (not active) not generate obstacle due to moving down car1
+push di
+push BX
+push AX
+mov DX,y1_Car1
+add DX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov CX,x1_Car1
+mov al,1
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car1+1,0
+
+not_genObs_right1:
+
+mov x2_Car1,BX
+draw_col BX,y1_Car1,y2_Car1,color_Car1 
+mov BX,x1_Car1
+draw_col BX,y1_Car1,y2_Car1,0fh
+inc BX
+mov x1_Car1,BX
+dec di
+cmp di,0h
+jz exit3Car1
+jmp move1RightSpeed
+
+exit3Car1:   ret
+
+
+move1Left:
+mov di,speed_Car1
+cmp di,0        ;check if speed equal = 0
+jnz move1LeftSpeed
+ret
+move1LeftSpeed:
+mov BX,x1_Car1   
+dec BX
+
+push di
+call check_around_OR_in_car1
+pop di
+mov CX,BX
+mov DX ,y1_Car1
+mov si ,y2_Car1
+
+call check_not_white_col
+
+mov cl,curState_Car1
+and cl,prevState_passObs1       ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov prevState_passObs1,cl
+
+cmp check_if_color,1
+jnz can_move_left1
+cmp item_color,2
+jz skip14
+jmp exit4Car1
+
+skip14:
+cmp prevState_passObs1,0
+jz no_passing_left1
+;cmp curState_Car1,0
+;jz no_passing_left1
+jmp can_move_left1
+
+no_passing_left1:
+cmp passObs_Car1+1,1
+jnz exit4Car1
+mov prevState_passObs1,1
+mov passObs_Car1+1,0
+
+can_move_left1:
+cmp genObs_Car1+1,1
+jnz not_genObs_left1    ;genObs_Car1+1 = 0 (not active) not generate obstacle due to moving down car1
+push di
+push BX
+push AX
+mov DX,y1_Car1
+add DX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov CX,x2_Car1
+mov al,1
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car1+1,0
+not_genObs_left1:
+
+mov x1_Car1,BX
+draw_col BX,y1_Car1,y2_Car1,color_Car1 
+mov BX,x2_Car1
+draw_col BX,y1_Car1,y2_Car1,0fh
+dec BX
+mov x2_Car1,BX
+dec di
+cmp di,0h
+jz exit4Car1
+jmp move1LeftSpeed
+
+exit4Car1:
+ret
+moveCar1 endp
+
+check_around_OR_in_Car2       proc  far ;check if around the car an obstacle
+mov CX,x1_Car2
+mov si,x2_Car2
+mov DX,y1_Car2
+dec DX
+call check_not_white_row    ;check above car
+cmp check_if_color,1
+jnz not_above_Car2
+cmp item_color,2        ;green obstacle
+jnz not_above_Car2
+mov curState_Car2,1
+ret
+
+not_above_Car2:
+mov CX,x1_Car2
+mov si,x2_Car2
+mov DX,y2_Car2
+inc DX
+call check_not_white_row    ;check below car
+cmp check_if_color,1
+jnz not_below_Car2
+cmp item_color,2
+jnz not_below_Car2
+mov curState_Car2,1
+ret
+
+not_below_Car2:
+mov CX,x2_Car2
+mov DX ,y1_Car2
+mov si ,y2_Car2
+inc CX
+call check_not_white_col    ;check right car
+cmp check_if_color,1
+jnz not_right_Car2
+cmp item_color,2
+jnz not_right_Car2
+mov curState_Car2,1
+ret
+
+not_right_Car2:
+mov CX,x1_Car2
+mov DX ,y1_Car2
+mov si ,y2_Car2
+dec CX
+call check_not_white_col    ;check left car
+cmp check_if_color,1
+jnz not_left_Car2
+cmp item_color,2
+jnz not_left_Car2
+mov curState_Car2,1
+ret
+
+not_left_Car2:
+mov si,offset items_x
+mov di,offset items_y
+add si,items     ; add two times to move by words
+add si,items
+add di,items     ; add two times to move by words
+add di,items
+mov CX,items
+check_itemsArray2:
+mov DX,[si]
+cmp DX,x1_Car2
+jl next2
+cmp DX,x2_Car2
+jg next2
+mov DX,[di]
+cmp DX,y1_Car2
+jl next2
+cmp DX,y2_Car2
+jg next2
+
+mov curState_Car2,1
+jmp return2
+
+next2:
+sub si,2
+sub di,2
+loop check_itemsArray2
+
+mov curState_Car2,0
+return2: 
+ret
+check_around_OR_in_Car2 endp
+
+
+
+moveCar2    proc far
+cmp ah,0    ;al=color,ah,direction      (0,1,2,3) -> (down,up,right,left)
+jnz not_move2down
+jmp move2Down
+not_move2down:    cmp ah,1
+jnz not_move2Up
+jmp move2Up
+not_move2Up:    cmp ah,2
+jnz not_move2Right
+jmp move2Right
+not_move2Right:
+jmp move2Left
+
+move2Down:
+mov di,speed_Car2
+cmp di,0        ;check if speed equal = 0
+jnz move2Downspeed
+ret
+move2Downspeed:
+mov BX,y2_Car2  
+inc BX
+
+push di
+call check_around_OR_in_Car2
+pop di
+mov DX,BX
+mov CX ,x1_Car2
+mov si ,x2_Car2
+
+call check_not_white_row
+
+mov cl,curState_Car2
+and cl,prevState_passObs2       ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov prevState_passObs2,cl
+
+cmp check_if_color,1
+jnz can_move_down2
+cmp item_color,2
+jz skip21
+jmp exit1Car2
+
+skip21:
+cmp prevState_passObs2,0
+jz no_passing_down2
+;cmp curState_Car2,0
+;jz no_passing_down2
+jmp can_move_down2
+
+no_passing_down2:
+cmp passObs_Car2+1,1
+jnz exit1Car2
+mov prevState_passObs2,1
+mov passObs_Car2+1,0
+
+can_move_down2:
+cmp genObs_Car2+1,1
+jnz not_genObs_down2    ;genObs_Car2+1 = 0 (not active) not generate obstacle due to moving down Car2
+push di
+push BX
+push AX
+mov CX,x1_Car2
+add CX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov dx,y1_Car2
+mov al,0
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car2+1,0
+
+not_genObs_down2:
+
+mov y2_Car2,BX
+drawRow x1_Car2,x2_Car2,BX,color_Car2
+mov BX,y1_Car2
+drawRow x1_Car2,x2_Car2,BX,0fh
+inc BX
+mov y1_Car2,BX
+dec di
+cmp di,0h
+jz exit1Car2
+jmp move2Downspeed
+exit1Car2:      ret
+
+move2Up:
+mov di,speed_Car2
+cmp di,0        ;check if speed equal = 0
+jnz move2UpSpeed
+ret
+move2UpSpeed:
+mov BX,y1_Car2   
+dec BX
+
+push di
+call check_around_OR_in_Car2
+pop di
+mov DX,BX
+mov CX ,x1_Car2
+mov si ,x2_Car2
+
+call check_not_white_row
+
+cmp curState_Car2,0
+and cl,prevState_passObs2      ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov cl,curState_Car2
+
+cmp check_if_color,1
+jnz can_move_up2
+cmp item_color,2
+jz skip22
+jmp exit2Car2
+
+skip22:
+cmp prevState_passObs2,0
+jz no_passing_up2
+;mov prevState_passObs2,cl
+;jz no_passing_up2
+jmp can_move_up2
+
+no_passing_up2:
+cmp passObs_Car2+1,1
+jnz exit2Car2
+mov prevState_passObs2,1
+mov passObs_Car2+1,0
+
+can_move_up2:
+cmp genObs_Car2+1,1
+jnz not_genObs_up2    ;genObs_Car2+1 = 0 (not active) not generate obstacle due to moving down Car2
+push di
+push BX
+push AX
+mov CX,x1_Car2
+add CX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov dx,y2_Car2
+mov al,0
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car2+1,0
+not_genObs_up2:
+
+mov y1_Car2,BX
+drawRow x1_Car2,x2_Car2,BX,color_Car2 
+mov BX,y2_Car2
+drawRow x1_Car2,x2_Car2,BX,0fh
+dec BX
+mov y2_Car2,BX
+dec di
+cmp di,0h
+jz exit2Car2
+jmp move2UpSpeed
+
+exit2Car2:      ret
+
+move2Right:
+mov di,speed_Car2
+cmp di,0        ;check if speed equal = 0
+jnz move2RightSpeed
+ret
+move2RightSpeed:
+mov BX,x2_Car2  
+inc BX
+
+push di
+call check_around_OR_in_Car2
+pop di
+mov CX,BX
+mov DX ,y1_Car2
+mov si ,y2_Car2
+
+call check_not_white_col
+
+mov cl,curState_Car2
+and cl,prevState_passObs2       ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov prevState_passObs2,cl
+
+cmp check_if_color,1
+jnz can_move_right2
+cmp item_color,2
+jz skip23
+jmp exit3Car2
+
+skip23:
+cmp prevState_passObs2,0
+jz no_passing_right2
+;cmp curState_Car2,0
+;jz no_passing_right2
+jmp can_move_right2
+
+no_passing_right2:
+cmp passObs_Car2+1,1
+jnz exit3Car2
+mov prevState_passObs2,1
+mov passObs_Car2+1,0
+
+can_move_right2:
+
+cmp genObs_Car2+1,1
+jnz not_genObs_right2    ;genObs_Car2+1 = 0 (not active) not generate obstacle due to moving down Car2
+push di
+push BX
+push AX
+mov DX,y1_Car2
+add DX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov CX,x1_Car2
+mov al,1
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car2+1,0
+
+not_genObs_right2:
+
+mov x2_Car2,BX
+draw_col BX,y1_Car2,y2_Car2,color_Car2 
+mov BX,x1_Car2
+draw_col BX,y1_Car2,y2_Car2,0fh
+inc BX
+mov x1_Car2,BX
+dec di
+cmp di,0h
+jz exit3Car2
+jmp move2RightSpeed
+
+exit3Car2:   ret
+
+
+move2Left:
+mov di,speed_Car2
+cmp di,0        ;check if speed equal = 0
+jnz move2LeftSpeed
+ret
+move2LeftSpeed:
+mov BX,x1_Car2   
+dec BX
+
+push di
+call check_around_OR_in_Car2
+pop di
+mov CX,BX
+mov DX ,y1_Car2
+mov si ,y2_Car2
+
+call check_not_white_col
+
+mov cl,curState_Car2
+and cl,prevState_passObs2       ;if prev = 1 (passing) and current = 1,there is obstacle around or in car then 
+mov prevState_passObs2,cl
+
+cmp check_if_color,1
+jnz can_move_left2
+cmp item_color,2
+jz skip24
+jmp exit4Car2
+
+skip24:
+cmp prevState_passObs2,0
+jz no_passing_left2
+;cmp curState_Car2,0
+;jz no_passing_left2
+jmp can_move_left2
+
+no_passing_left2:
+cmp passObs_Car2+1,1
+jnz exit4Car2
+mov prevState_passObs2,1
+mov passObs_Car2+1,0
+
+can_move_left2:
+cmp genObs_Car2+1,1
+jnz not_genObs_left2    ;genObs_Car2+1 = 0 (not active) not generate obstacle due to moving down Car2
+push di
+push BX
+push AX
+mov DX,y1_Car2
+add DX,6             ;width car 8 pixels, mid point of obstacle after x1+3
+mov CX,x2_Car2
+mov al,1
+call add_obstacle
+pop AX
+pop BX
+pop di
+mov genObs_Car2+1,0
+not_genObs_left2:
+
+mov x1_Car2,BX
+draw_col BX,y1_Car2,y2_Car2,color_Car2 
+mov BX,x2_Car2
+draw_col BX,y1_Car2,y2_Car2,0fh
+dec BX
+mov x2_Car2,BX
+dec di
+cmp di,0h
+jz exit4Car2
+jmp move2LeftSpeed
+
+exit4Car2:
+ret
+moveCar2 endp
+
+
+
+
+check_move   proc   FAR     ;this procedure for checking produced keys and released keys and change flags
+cmp al,4Bh      ;check scan code if press left arrow
+jnz not_pressedLeft2
+mov left_Car2,1
+;ret
+
+not_pressedLeft2:    
+cmp al,4Dh      ;check scan code if press right arrow
+jnz not_pressedRight2
+mov right_Car2,1
+;ret
+
+not_pressedRight2:        
+cmp al,48h      ;check scan code if press up arrow
+jnz not_pressedUp2
+mov up_Car2,1
+;ret
+
+not_pressedUp2:
+cmp al,50h      ;check scan code if press down arrow
+jnz not_pressedDown2
+mov down_Car2,1
+;ret
+
+not_pressedDown2:    
+cmp al,4Bh+80h      ;check scan code if release left arrow
+jnz not_releaseLeft2
+mov left_Car2,0
+;ret
+
+not_releaseLeft2:    
+cmp al,4Dh+80h      ;check scan code if release right arrow
+jnz not_releaseRight2
+mov right_Car2,0
+;ret
+
+not_releaseRight2:        
+cmp al,48h+80h      ;check scan code if relese up arrow
+jnz not_releaseUp2
+mov up_Car2,0
+;ret
+
+not_releaseUp2:
+cmp al,50h+80h      ;check scan code if release down arrow
+jnz not_releaseDown2
+mov down_Car2,0
+;ret
+
+not_releaseDown2:
+cmp al,1eh          ;check scan code if press A
+jnz not_pressedLeft1
+mov left_Car1,1
+;ret
+
+not_pressedLeft1:    
+cmp al,20h          ;check scan code if press D
+jnz not_pressedRight1
+mov right_Car1,1
+;ret
+
+not_pressedRight1:        
+cmp al,11h          ;check scan code if press W
+jnz not_pressedUp1
+mov up_Car1,1
+;ret
+
+not_pressedUp1:
+cmp al,1fh          ;check scan code if press   S
+jnz not_pressedDown1
+mov down_Car1,1
+;ret
+
+not_pressedDown1:
+cmp al,1eh+80h      ;check scan code if release A
+jnz not_releaseLeft1
+mov left_Car1,0
+;ret
+
+not_releaseLeft1:    
+cmp al,20h+80h    ;check scan code if release D
+jnz not_releaseRight1
+mov right_Car1,0
+;ret
+
+not_releaseRight1:        
+cmp al,11h+80h      ;check scan code if release W
+jnz not_releaseUp1
+mov up_Car1,0
+;ret
+
+not_releaseUp1:
+cmp al,1fh+80h      ;check scan code if release S
+jnz not_releaseDown1
+mov down_Car1,0
+
+not_releaseDown1:
+ret
+
+check_move endp
+end
+
