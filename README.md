@@ -2,21 +2,21 @@
 
 ## Table of Contents
 
-- [Description](#Desc)
-- [Languages](#Lang)
-- [Features](#Fet)
-- [How To Use](#How)
+- [Description](#desc)
+- [Languages](#lang)
+- [Features](#fet)
+- [How To Use](#how)
 
-## Description <a name = "Desc"></a>
+## Description <a name = "desc"></a>
 
 It is a dynamic two-player game that offers a thrilling racing experience. Utilizing Local Area Network (LAN) technology, it allows players to compete in real-time, providing a seamless and lag-free gaming environment. The game is designed to deliver an immersive racing experience, fostering a spirit of competition between the players.
 
-## Languages <a name = "Lang"></a>
+## Languages <a name = "lang"></a>
 
 - Assembly
 - Python
 
-## Features <a name = "Fet"></a>
+## Features <a name = "fet"></a>
 
 - Generate a racing track randomly
 - Chatting
@@ -25,7 +25,7 @@ It is a dynamic two-player game that offers a thrilling racing experience. Utili
 - scoreboard
 - Send/Recieve Invitation
 
-## How To Use <a name = "How"></a>
+## How To Use <a name = "how"></a>
 
 - You need to download DOSBox
 - Change mount dircetory to the game folder
